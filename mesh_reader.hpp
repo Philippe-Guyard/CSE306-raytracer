@@ -11,7 +11,6 @@
 
 using Vector = std::array<double, 3>;
 
-
 class TriangleIndices
 {
 public:
@@ -22,11 +21,11 @@ public:
     int group;            // face group
 };
 
-class TriangleMesh
+class TriangleMeshDescriptor
 {
 public:
-    ~TriangleMesh() {}
-    TriangleMesh(){};
+    ~TriangleMeshDescriptor() {}
+    TriangleMeshDescriptor(){};
 
     void readOBJ(const char *obj)
     {

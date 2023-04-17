@@ -2,6 +2,7 @@
 #define VECTOR_H
 
 #include <cmath>
+#include <array>
 
 class Vector3 {
 public:
@@ -9,6 +10,7 @@ public:
     Vector3(double x = 0, double y = 0, double z = 0): x(x), y(y), z(z) {};
     // Not necessary since C++ has a default copy constructor
     // Vector3(const Vector3& v): x(v.x), y(v.y), z(v.z) {};
+    Vector3(const std::array<double, 3>& a): x(a[0]), y(a[1]), z(a[2]) {};
 
 	double norm2() const;
 	double norm() const;
