@@ -85,6 +85,15 @@ public:
         auto intersection = find_closest_intersection(r);
         if (!intersection.has_value())
             return bg_color;
+        
+        if (intersection.value().object == nullptr) {
+            std::cout << "Error: object is nullptr" << std::endl;
+            return bg_color;
+        }
+        if (intersection.value().t < 0) {
+            std::cout << "Error: t < 0" << std::endl;
+            return bg_color;
+        }
 
         const Vector3& N = intersection.value().normal;
         const Vector3& P = intersection.value().point;

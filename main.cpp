@@ -12,7 +12,8 @@
 #include "raytracer/sphere.h"
 #include "raytracer/vector.h"
 #include "raytracer/scene.h"
-#include "raytracer/triangles.h"
+#include "raytracer/triangle.hpp"
+#include "raytracer/mesh.hpp"
 
 #include "mesh_reader.hpp"
 
@@ -52,34 +53,28 @@ TriangleMesh make_mesh(const char *path, const Vector3& color, bool is_mirror, b
     desc.readOBJ(path);
     // Iterate throught the vertices of the mesh and apply the transformation
     if (translation.has_value() || scale != 1) {
-        for (size_t i = 0; i < desc.vertices.size(); ++i) {
-            desc.vertices[i][0] *= scale;
-            desc.vertices[i][1] *= scale;
-            desc.vertices[i][2] *= scale;
-            
-            if (translation.has_value()) {
-                desc.vertices[i][0] += translation.value().x;
-                desc.vertices[i][1] += translation.value().y;
-                desc.vertices[i][2] += translation.value().z;
-            }
+        for(auto& vertex: desc.vertices) {
+            vertex = scale * vertex;
+
+            if (translation.has_value()) 
+                vertex += translation.value();
         }
     }
 
     std::vector<Triangle> triangles;
     for (size_t i = 0; i < desc.indices.size(); ++i) {
-        const std::array<double, 3> &x = desc.vertices[desc.indices[i].vtxi];
-        const std::array<double, 3> &y = desc.vertices[desc.indices[i].vtxj];
-        const std::array<double, 3> &z = desc.vertices[desc.indices[i].vtxk];
+        const auto &x = desc.vertices[desc.indices[i].vtxi];
+        const auto &y = desc.vertices[desc.indices[i].vtxj];
+        const auto &z = desc.vertices[desc.indices[i].vtxk];
 
-        const std::array<double, 3> &nx = desc.normals[desc.indices[i].ni];
-        const std::array<double, 3> &ny = desc.normals[desc.indices[i].nj];
-        const std::array<double, 3> &nz = desc.normals[desc.indices[i].nk];
+        const auto &nx = desc.normals[desc.indices[i].ni];
+        const auto &ny = desc.normals[desc.indices[i].nj];
+        const auto &nz = desc.normals[desc.indices[i].nk];
 
-        Vector3 a(x), b(y), c(z), n1(nx), n2(ny), n3(nz);
-        triangles.emplace_back(Triangle(a, b, c, n1, n2, n3));
+        triangles.emplace_back(Triangle(x, y, z, nx, ny, nz));
     }
 
-    return TriangleMesh(std::move(triangles), color, is_mirror, is_transparent);
+    return TriangleMesh(std::move(desc.vertices), std::move(desc.normals), std::move(triangles), color, is_mirror, is_transparent);
 }
 
 int main() {
@@ -97,7 +92,7 @@ int main() {
 	Sphere floor(Vector3(0, -955, 0), 940, Vector3(0.6, 0.5, 0.7));
 	Sphere front_wall(Vector3(0, 0, -1000), 940, Vector3(0.1, 0.6, 0.7));
 	Sphere behind_wall(Vector3(0, 0, 1000), 940, Vector3(0.0, 0.2, 0.9));
-    TriangleMesh mesh = make_mesh("meshes/cat.obj", Vector3(1., 1., 1.), false, false, Vector3(0, -10, 0), 0.6);
+    TriangleMesh mesh = make_mesh("meshes/cat.obj", Vector3(1., 1., 1.), false, true, Vector3(0, -10, 0), 0.6);
     // Sphere random(Vector3(0, 6, 0), 6, Vector3(1, 1, 1));
 
     Scene scene(light);
@@ -115,11 +110,12 @@ int main() {
     Vector3 camera_center(0, 0, 55);
 	
     Image img(W, H);
+    std::cout << "Rendering..." << std::endl;
     #pragma omp parallel for schedule(dynamic, 1)
     for (int i = 0; i < H; i++) {
         for (int j = 0; j < W; j++) {
             Vector3 color = Vector3(0, 0, 0);
-            size_t samples_per_pixel = 8;
+            size_t samples_per_pixel = 16;
             for(size_t k = 0; k < samples_per_pixel; k++) {
                 double randomX, randomY;
                 box_muller(randomX, randomY);

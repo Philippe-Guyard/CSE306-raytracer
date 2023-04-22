@@ -9,7 +9,9 @@
 #include <array>
 #include <string.h>
 
-using Vector = std::array<double, 3>;
+#include "raytracer/vector.h"
+
+using Vector = Vector3;
 
 class TriangleIndices
 {

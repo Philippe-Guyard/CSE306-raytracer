@@ -12,6 +12,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 set(SOURCES main.cpp
             mesh_reader.hpp
+            raytracer/bvh.hpp
             raytracer/geometry.h 
             raytracer/ray.h 
             raytracer/vector.h 
@@ -19,6 +20,7 @@ set(SOURCES main.cpp
             raytracer/vector.cpp 
             raytracer/sphere.cpp
             raytracer/scene.h
-            raytracer/triangles.h)
+            raytracer/triangle.hpp
+            raytracer/mesh.hpp)
 
 add_executable(sphere ${SOURCES})

@@ -1,5 +1,7 @@
 #include "vector.h"
 #include <cmath>
+#include <stdexcept>
+#include <ostream>
 
 // NOTE: No need to call std::move anywhere. 
 // See this: https://stackoverflow.com/questions/14856344/when-should-stdmove-be-used-on-a-function-return-value
@@ -84,4 +86,16 @@ void Vector3::operator+=(const Vector3& b) {
     x += b.x;
     y += b.y;
     z += b.z;
+}
+
+double& Vector3::operator[](size_t i) {
+    if (i == 0) return x;
+    if (i == 1) return y;
+    if (i == 2) return z;
+    throw std::out_of_range("Vector3 index out of range");
+}
+
+std::ostream& operator<< ( std::ostream& os, const Vector3& c ) {
+    os << "(" << c.x << ", " << c.y << ", " << c.z << ")";
+    return os;
 }
