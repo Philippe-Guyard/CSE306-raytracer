@@ -1,6 +1,8 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <chrono>
+#include <iomanip>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -92,7 +94,7 @@ int main() {
 	Sphere floor(Vector3(0, -955, 0), 940, Vector3(0.6, 0.5, 0.7));
 	Sphere front_wall(Vector3(0, 0, -1000), 940, Vector3(0.1, 0.6, 0.7));
 	Sphere behind_wall(Vector3(0, 0, 1000), 940, Vector3(0.0, 0.2, 0.9));
-    TriangleMesh mesh = make_mesh("meshes/cat.obj", Vector3(1., 1., 1.), false, true, Vector3(0, -10, 0), 0.6);
+    TriangleMesh mesh = make_mesh("meshes/cat.obj", Vector3(1., 1., 1.), false, false, Vector3(0, -10, 0), 0.6);
     // Sphere random(Vector3(0, 6, 0), 6, Vector3(1, 1, 1));
 
     Scene scene(light);
@@ -111,11 +113,13 @@ int main() {
 	
     Image img(W, H);
     std::cout << "Rendering..." << std::endl;
+    // Start measuring time 
+    auto start = std::chrono::high_resolution_clock::now();
     #pragma omp parallel for schedule(dynamic, 1)
     for (int i = 0; i < H; i++) {
         for (int j = 0; j < W; j++) {
             Vector3 color = Vector3(0, 0, 0);
-            size_t samples_per_pixel = 16;
+            size_t samples_per_pixel = 64;
             for(size_t k = 0; k < samples_per_pixel; k++) {
                 double randomX, randomY;
                 box_muller(randomX, randomY);
@@ -130,6 +134,10 @@ int main() {
         }
     }
     img.save("out.png");
+    auto finish = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = finish - start;
+    double time_seconds = elapsed.count();
+    std::cout << "Elapsed time: " << time_seconds << " s" << std::setprecision(5) << std::endl;
 
     return 0;
 }
