@@ -40,6 +40,15 @@ public:
         Vector3 T2 = N.cross(T1);
         return x * T1 + y * T2 + z * N;
     }
+
+    static std::pair<double, double> box_muller() {
+        double r1 = Rng::random_real();
+        double r2 = Rng::random_real();
+        double x = sqrt(-2 * log(r1)) * cos(2 * M_PI * r2);
+        double y = sqrt(-2 * log(r1)) * sin(2 * M_PI * r2);
+
+        return std::make_pair(x, y);
+    }
 };
 
 #endif // RNG_HPP

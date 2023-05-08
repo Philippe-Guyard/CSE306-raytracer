@@ -97,7 +97,7 @@ public:
 
         const Vector3& N = intersection.value().normal;
         const Vector3& P = intersection.value().point;
-        const Vector3& rho = intersection.value().object->get_color();
+        const Vector3& rho = intersection.value().color; // intersection.value().object->get_color();
 
         if (intersection.value().object->is_mirror()) 
             return reflected_get_color(r, P, N, max_bounces);

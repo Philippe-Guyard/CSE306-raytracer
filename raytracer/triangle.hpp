@@ -2,6 +2,7 @@
 
 #include "vector.h"
 #include "geometry.h"
+#include "texture.hpp"
 
 #include <vector>
 #include <optional>
@@ -12,11 +13,16 @@ private:
     // TODO: Huge memory loss duplicating normals and vertices
     Vector3 A, B, C;
     Vector3 n1, n2, n3;
+    Vector3 uv1, uv2, uv3;
     Vector3 N;
+    Texture *texture;
 public:
     Triangle(const Vector3& a, const Vector3& b, const Vector3& c,
-             const Vector3& n1, const Vector3& n2, const Vector3& n3): A(a), B(b), C(c), n1(n1), n2(n2), n3(n3) {
+             const Vector3& n1, const Vector3& n2, const Vector3& n3, 
+             const Vector3& uv1, const Vector3& uv2, const Vector3& uv3,
+             Texture *texture) : A(a), B(b), C(c), n1(n1), n2(n2), n3(n3), uv1(uv1), uv2(uv2), uv3(uv3) {
         N = (b - a).cross(c - a);
+        this->texture = texture;
     };
 
     std::optional<Intersection> intersect(const Ray& ray, const Geometry *src) const {
@@ -40,8 +46,9 @@ public:
         double t = (A - O).dot(N) / det;
         if (t < 0)
             return std::nullopt;
-            
-        return Intersection(src, ray, O + t * u, alpha * n1 + beta * n2 + gamma * n3, t);
+        
+        Vector3 color = this->texture->get_pixel(alpha * uv1 + beta * uv2 + gamma * uv3);
+        return Intersection(src, ray, O + t * u, alpha * n1 + beta * n2 + gamma * n3, color, t);
     }
 
     const Vector3& get_a() const {
@@ -65,6 +72,9 @@ public:
         n2 = other.n2;
         n3 = other.n3;
         N = other.N;
+        uv1 = other.uv1;
+        uv2 = other.uv2;
+        uv3 = other.uv3;
         return *this;
     }
 };

@@ -37,6 +37,7 @@ Vector3 operator/(const Vector3& a, const double b);
 Vector3 operator*(const Vector3& a, const Vector3& b);
 
 Vector3 gamma_correct(const Vector3& v);
+Vector3 reverse_gamma_correct(const Vector3& v);
 
 std::ostream& operator<< ( std::ostream& os, const Vector3& c );
 

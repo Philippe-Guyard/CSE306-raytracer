@@ -9,12 +9,12 @@
 #include "triangle.hpp"
 #include "bvh.hpp"
 
-
 class TriangleMesh : public Geometry {
 private:
     std::vector<Vector3> vertices, normals;
     std::vector<Triangle> triangles;
 
+    Texture *texture;
     BVH::BVH *bvh;
 public:
     // TODO: This 
@@ -24,9 +24,9 @@ public:
     //     this->triangles = std::vector<Triangle>(triangles);
     // }
 
-    TriangleMesh(std::vector<Vector3>&& vertices, std::vector<Vector3>&& normals, std::vector<Triangle>&& triangles, const Vector3& color, 
-                bool is_mirror = false, 
-                bool is_transparent = false): Geometry(color, is_mirror, is_transparent) {
+    TriangleMesh(std::vector<Vector3>&& vertices, std::vector<Vector3>&& normals, std::vector<Triangle>&& triangles, const Vector3& color,
+                Texture *texture, bool is_mirror = false, bool is_transparent = false): Geometry(color, is_mirror, is_transparent) {
+        this->texture = texture;
         this->vertices = std::move(vertices);
         this->triangles = std::move(triangles);
         this->bvh = new BVH::BVH(this, this->triangles.begin(), this->triangles.end());
@@ -45,5 +45,6 @@ public:
 
     ~TriangleMesh() {
         delete this->bvh;
+        delete this->texture;
     }
 };

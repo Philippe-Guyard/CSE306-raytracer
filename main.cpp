@@ -42,11 +42,14 @@ public:
     }
 };
 
-void box_muller(double &x, double &y) {
-    double r1 = Rng::random_real();
-    double r2 = Rng::random_real();
-    x = sqrt(-2 * log(r1)) * cos(2 * M_PI * r2);
-    y = sqrt(-2 * log(r1)) * sin(2 * M_PI * r2);
+Texture* load_texture(const char *path) {
+    int W, H, C;
+    unsigned char *imageSource = stbi_load(path,
+                                 &W,
+                                 &H,
+                                 &C,
+                                 STBI_rgb);
+    return new Texture(imageSource, W, H, C);
 }
 
 TriangleMesh make_mesh(const char *path, const Vector3& color, bool is_mirror, bool is_transparent,
@@ -64,6 +67,7 @@ TriangleMesh make_mesh(const char *path, const Vector3& color, bool is_mirror, b
     }
 
     std::vector<Triangle> triangles;
+    Texture *texture = new Texture(color);
     for (size_t i = 0; i < desc.indices.size(); ++i) {
         const auto &x = desc.vertices[desc.indices[i].vtxi];
         const auto &y = desc.vertices[desc.indices[i].vtxj];
@@ -73,11 +77,53 @@ TriangleMesh make_mesh(const char *path, const Vector3& color, bool is_mirror, b
         const auto &ny = desc.normals[desc.indices[i].nj];
         const auto &nz = desc.normals[desc.indices[i].nk];
 
-        triangles.emplace_back(Triangle(x, y, z, nx, ny, nz));
+        const auto &uv1 = desc.uvs[desc.indices[i].uvi];
+        const auto &uv2 = desc.uvs[desc.indices[i].uvj];
+        const auto &uv3 = desc.uvs[desc.indices[i].uvk];
+
+        triangles.emplace_back(Triangle(x, y, z, nx, ny, nz, uv1, uv2, uv3, texture));
     }
 
-    return TriangleMesh(std::move(desc.vertices), std::move(desc.normals), std::move(triangles), color, is_mirror, is_transparent);
+    return TriangleMesh(std::move(desc.vertices), std::move(desc.normals), std::move(triangles), color, texture, is_mirror, is_transparent);
 }
+
+// Same as previous one but takes a texture instead of a color 
+TriangleMesh make_mesh(const char *path, const char *texture_path, bool is_mirror, bool is_transparent,
+                       std::optional<Vector3> translation = std::nullopt, double scale = 1) {
+    TriangleMeshDescriptor desc;
+    desc.readOBJ(path);
+    // Iterate throught the vertices of the mesh and apply the transformation
+    if (translation.has_value() || scale != 1) {
+        for(auto& vertex: desc.vertices) {
+            vertex = scale * vertex;
+
+            if (translation.has_value()) 
+                vertex += translation.value();
+        }
+    }
+
+    std::vector<Triangle> triangles;
+    Texture *texture = load_texture(texture_path);
+    for (size_t i = 0; i < desc.indices.size(); ++i) {
+        const auto &x = desc.vertices[desc.indices[i].vtxi];
+        const auto &y = desc.vertices[desc.indices[i].vtxj];
+        const auto &z = desc.vertices[desc.indices[i].vtxk];
+
+        const auto &nx = desc.normals[desc.indices[i].ni];
+        const auto &ny = desc.normals[desc.indices[i].nj];
+        const auto &nz = desc.normals[desc.indices[i].nk];
+
+        const auto &uv1 = desc.uvs[desc.indices[i].uvi];
+        const auto &uv2 = desc.uvs[desc.indices[i].uvj];
+        const auto &uv3 = desc.uvs[desc.indices[i].uvk];
+
+        triangles.emplace_back(Triangle(x, y, z, nx, ny, nz, uv1, uv2, uv3, texture));
+    }
+
+    Vector3 color = Vector3(0, 0, 0);
+    return TriangleMesh(std::move(desc.vertices), std::move(desc.normals), std::move(triangles), color, texture, is_mirror, is_transparent);
+}
+
 
 int main() {
     int W = 512;
@@ -86,20 +132,24 @@ int main() {
 
     LightSource light(Vector3(-10, 20, 40), 2E10);
 
-    Sphere center(Vector3(-10, -5, 0), 10, Vector3(0., 0.5, 1.), true, false);
-    Sphere center2(Vector3(10, -5, 0), 10, Vector3(1., 1., 1.), false, false);
+    // Sphere center(Vector3(-20, -5, 0), 10, Vector3(0., 0.5, 1.), false, false);
+    // Sphere center2(Vector3(0, -5, 0), 10, Vector3(1., 1., 1.), true, false);
+    // Sphere center3(Vector3(20, -5, 0), 10, Vector3(1., 1., 1.), false, true);
+    Sphere center(Vector3(0, -5, 0), 10, Vector3(1., 1., 1.), false, false);
     Sphere left_wall(Vector3(-1000, 0, 0), 940, Vector3(0.5, 0.8, 0.1));
 	Sphere right_wall(Vector3(1000, 0, 0), 940, Vector3(0.9, 0.2, 0.3));
 	Sphere ceiling(Vector3(0, 1000, 0), 940, Vector3(0.3, 0.5, 0.3));
 	Sphere floor(Vector3(0, -955, 0), 940, Vector3(0.6, 0.5, 0.7));
 	Sphere front_wall(Vector3(0, 0, -1000), 940, Vector3(0.1, 0.6, 0.7));
 	Sphere behind_wall(Vector3(0, 0, 1000), 940, Vector3(0.0, 0.2, 0.9));
-    TriangleMesh mesh = make_mesh("meshes/cat.obj", Vector3(1., 1., 1.), false, false, Vector3(0, -10, 0), 0.6);
+    // TriangleMesh mesh = make_mesh("meshes/cat.obj", Vector3(1., 1., 1.), false, false, Vector3(0, -10, 0), 0.6);
+    TriangleMesh mesh = make_mesh("meshes/cat.obj", "meshes/cat_diff.png", false, false, Vector3(0, -10, 0), 0.6);
     // Sphere random(Vector3(0, 6, 0), 6, Vector3(1, 1, 1));
 
     Scene scene(light);
     // scene.add_object(&center);
     // scene.add_object(&center2);
+    // scene.add_object(&center3);
     scene.add_object(&left_wall);
     scene.add_object(&right_wall);
     scene.add_object(&ceiling);
@@ -107,7 +157,6 @@ int main() {
     scene.add_object(&front_wall);
     scene.add_object(&behind_wall);
     scene.add_object(&mesh);
-    // scene.add_object(&random);
 
     Vector3 camera_center(0, 0, 55);
 	
@@ -121,8 +170,7 @@ int main() {
             Vector3 color = Vector3(0, 0, 0);
             size_t samples_per_pixel = 64;
             for(size_t k = 0; k < samples_per_pixel; k++) {
-                double randomX, randomY;
-                box_muller(randomX, randomY);
+                auto [randomX, randomY] = Rng::box_muller();
                 Vector3 dir = Vector3(j - W / 2. + 0.5 + randomX * 0.5, 
                                      -i + H / 2. + 0.5 + randomY * 0.5, 
                                      -W/(2.*tan(alpha/2.)));

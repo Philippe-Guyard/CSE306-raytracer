@@ -54,6 +54,14 @@ Vector3 gamma_correct(const Vector3& v) {
     return Vector3(gamma_correct(v.x), gamma_correct(v.y), gamma_correct(v.z));
 }
 
+inline double reverse_gamma_correct(double x) {
+    return std::pow(x, 2.2);
+}
+
+Vector3 reverse_gamma_correct(const Vector3& v) {
+    return Vector3(reverse_gamma_correct(v.x), reverse_gamma_correct(v.y), reverse_gamma_correct(v.z));
+}
+
 Vector3 Vector3::normalized() const {
     if (norm2() <= 0.0001)
         return Vector3(0, 0, 0);

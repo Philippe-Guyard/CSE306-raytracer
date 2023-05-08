@@ -21,6 +21,7 @@ set(SOURCES main.cpp
             raytracer/sphere.cpp
             raytracer/scene.h
             raytracer/triangle.hpp
-            raytracer/mesh.hpp)
+            raytracer/mesh.hpp
+            raytracer/texture.hpp)
 
 add_executable(sphere ${SOURCES})

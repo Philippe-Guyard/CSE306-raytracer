@@ -6,31 +6,7 @@
 #include "vector.h"
 #include "ray.h"
 
-class Geometry;
-
-struct Intersection {
-    const Geometry *object;
-    const Ray& source;
-    Vector3 point, normal;
-    double t;
-
-    // Useless to use temporaries here since Vector3 has no heap allocation.
-    // See this: https://www.youtube.com/watch?v=ehMg6zvXuMY
-    // And this: https://stackoverflow.com/questions/3279543/what-is-the-copy-and-swap-idiom
-    Intersection(const Geometry *object, 
-                 const Ray& source, 
-                 const Vector3& point, 
-                 const Vector3& normal, 
-                 double t): object(object), source(source), point(point), normal(normal), t(t) {};
-
-    Intersection(Intersection&& other) noexcept: source(other.source) {
-        object = other.object;
-        point = std::move(other.point);
-        normal = std::move(other.normal);
-        t = other.t;
-        other.object = nullptr;
-    };
-};
+struct Intersection;
 
 class Geometry {
 protected:
@@ -47,6 +23,32 @@ public:
 
     bool is_mirror() const { return m_is_mirror; }
     bool is_transparent() const { return m_is_transparent; }
+};
+
+struct Intersection {
+    const Geometry *object = nullptr;
+    const Ray& source;
+    Vector3 point, normal, color;
+    double t;
+
+    // Useless to use temporaries here since Vector3 has no heap allocation.
+    // See this: https://www.youtube.com/watch?v=ehMg6zvXuMY
+    // And this: https://stackoverflow.com/questions/3279543/what-is-the-copy-and-swap-idiom
+    Intersection(const Geometry *object, 
+                 const Ray& source, 
+                 const Vector3& point, 
+                 const Vector3& normal, 
+                 double t): object(object), source(source), point(point), normal(normal), t(t) {
+        color = object->get_color();
+    };
+
+    // Same as above but takes color as parameter
+    Intersection(const Geometry *object, 
+                 const Ray& source, 
+                 const Vector3& point, 
+                 const Vector3& normal, 
+                 const Vector3& color,
+                 double t): object(object), source(source), point(point), normal(normal), color(color), t(t) {};
 };
 
 #endif 
