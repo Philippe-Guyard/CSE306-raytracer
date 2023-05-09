@@ -44,3 +44,4 @@ install_manifest.txt
 
 # images 
 *.png
+!lab_5/*.png
